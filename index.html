@@ -27,22 +27,22 @@
             };
             return (
                 <nav>
-                        <ul style={{ listStyleType: 'none', padding: 0 }}>
-                            <li style={{ margin: '10px 0' }}>
-                                <form id="form-search-post" onSubmit={handleSubmit}>
+                        <ul style={{ listStyleType: 'none', padding: 0, display: "flex", alignItems: "center" }}>
+                            <li style={{ margin: '0px 10px' }}>
+                                <form id="form-search-post" onSubmit={handleSubmit} style = {{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#4e1404ff", gap: "10px" }}>
                                     <input
                                         type="text"
                                         name="search"
                                         id="input-id-post"
                                         placeholder="Buscar post por ID"
                                         autoComplete="off"
-                                        style={{ marginRight: '5px' }}
+                                        style={{ padding: "5px", borderRadius: "7px", border: "none", backgroundColor: "#cd913cff", color: "#4e1404ff" }}
                                     />
-                                    <button type="submit" id="btn-search-post">Buscar</button>
+                                    <button type="submit" id="btn-search-post" style = {{ padding: "5px 10px", borderRadius: "7px", border: "none", backgroundColor: "#cd913cff", color: "#4e1404ff", cursor: "pointer" }}>Buscar</button>
                                 </form>
                             </li>
-                            <li><a href="#" style={{ color: '#cd913c', textDecoration: 'none' }}>Posts</a></li>
-                            <li><a href="./html/WritePost.html" style={{ color: '#cd913c', textDecoration: 'none' }}>Escribe un post</a></li>
+                            <li style={{ margin: '0px 10px' }}><a href="#" style={{ color: "#fff", textDecoration: "none", fontSize: "1rem", fontWeight: "500" }}>Posts</a></li>
+                            <li style={{ margin: '0px 10px' }}><a href="./html/WritePost.html" style={{ color: "#fff", textDecoration: "none", fontSize: "1rem", fontWeight: "500" }}>Escribe un post</a></li>
                         </ul>
                     </nav>
             );
@@ -60,27 +60,45 @@
                 </header>
             );
         }
-
         function BlogList({ posts, onSelectPost }) {
             return (
-                <div>
-                    {posts.map(post => (
-                        <div key={post.id} onClick={() => onSelectPost(post.id)}>
-                            <h2>{post.title}</h2>
-                            <p>{post.summary}</p>
+                <main style = {{display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", padding: "20px 10%", backgroundColor: "#00181eff"}}>
+                    <h2 style ={{color: "#fff"}}>Posts</h2>
+                    <div style = {{width: "100%", display: "grid", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "20px", padding: "20px", 
+                                    marginBottom: "30px", borderRadius: "40px", gap: "0px", backgroundColor: "#17220eff"}}>
+                        {posts.map(post => (
+                        <div key={post.id} style = {{color: "#fff"}}>
+                            <h3 style = {{color: "#fff", fontSize: "1.5rem", fontWeight: "600", marginBottom:"10px"}}>
+                                <span style = {{fontSize: "1.5rem", fontWeight: "600", marginBottom:"10px"}}>{post.id} : </span>
+                                {post.title}
+                            </h3>
+                            <p style = {{ color: ""  }}>fecha: {post.created_at}</p>
+                            <p>categoria: {post.category}</p>
+                            <p>{post.content}</p>
+                            <div>
+                                <button onClick={() => onSelectPost(post.id)}>seleccionar</button>   
+                            </div>
                         </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                    
+                </main>
             );
         }
 
         function BlogPost({ post }) {
-            if (!post) return <div>Seleccione una entrada</div>;
-
+            console.log("entro",post);
+            if (!post) return <div>Seleccione una post</div>;
             return (
-                <div>
-                    <h2>{post.title}</h2>
+                <div key={post.id} onClick={() => onSelectPost(post.id)}>
+                    <h3><span>{post.id}</span>{post.title}</h3>
+                    <p>fecha: {post.created_at}</p>
+                    <p>categoria: {post.category}</p>
                     <p>{post.content}</p>
+                    <div>
+                        <button>editar</button> 
+                        <button>eliminar</button>  
+                    </div>
                 </div>
             );
         }
@@ -88,28 +106,36 @@
         function App() {
             const [selectedPostId, setSelectedPostId] = React.useState();
             const [posts, setPosts] = React.useState([
-                { id: 1, title: 'Entrada 1', summary: 'Resumen de la entrada 1', content: 'Contenido completo de la entrada 1' },
+                { id: 1, title: 'Entrada 1', category: "cattegoria", content: 'Contenido del post', bannerImage: 'Contenido completo de la entrada 1', created_at: '2021-10-10' },
+                { id: 2, title: 'Entrada 2', category: "cattegoria", content: 'Contenido del post', bannerImage: 'Contenido completo de la entrada 2', created_at: '2021-10-10' }
             ]);
-
+        
             const selectPost = (postId) => {
                 setSelectedPostId(postId);
             };
-
-            const selectedPost = posts.find(post => post.id === selectedPostId);
-
+        
+            
+            const clearSelectedPost = () => {
+                setSelectedPostId(undefined); 
+            };
+        
             React.useEffect(() => {
-                //aqui puedo hacer varias cosas 
-                normalizeHtml()
-            }, []);
 
+                normalizeHtml();
+            }, []);
+        
+            const selectedPost = posts.find(post => post.id === selectedPostId);
+        
             return (
                 <div>
                     <Header />
-                    <BlogList posts={posts} onSelectPost={selectPost} />
-                    <BlogPost post={selectedPost} />
+                    {!selectedPostId && <BlogList posts={posts} onSelectPost={selectPost} />}
+                    {selectedPost && <BlogPost post={selectedPost} />}
+                    {selectedPost && <button onClick={clearSelectedPost}>Volver a la lista</button>}
                 </div>
             );
         }
+
 
         ReactDOM.render(<App />, document.querySelector('#root'));
     </script>
