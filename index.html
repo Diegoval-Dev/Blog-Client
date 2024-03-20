@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <title>My Blog</title>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function normalizeHtml(){
+            const body = document.querySelector('body');
+            body.style.backgroundColor = '#00181eff';
+            body.style.padding = '0';
+            body.style.margin = '0';
+            body.style.fontFamily = 'Arial, sans-serif';
+        }
+        function HeaderForm() {
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const postId = e.target.search.value;
+                console.log('Buscando post con ID:', postId);
+            };
+            return (
+                <nav>
+                        <ul style={{ listStyleType: 'none', padding: 0 }}>
+                            <li style={{ margin: '10px 0' }}>
+                                <form id="form-search-post" onSubmit={handleSubmit}>
+                                    <input
+                                        type="text"
+                                        name="search"
+                                        id="input-id-post"
+                                        placeholder="Buscar post por ID"
+                                        autoComplete="off"
+                                        style={{ marginRight: '5px' }}
+                                    />
+                                    <button type="submit" id="btn-search-post">Buscar</button>
+                                </form>
+                            </li>
+                            <li><a href="#" style={{ color: '#cd913c', textDecoration: 'none' }}>Posts</a></li>
+                            <li><a href="./html/WritePost.html" style={{ color: '#cd913c', textDecoration: 'none' }}>Escribe un post</a></li>
+                        </ul>
+                    </nav>
+            );
+        }
+        function Header() {
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const postId = e.target.search.value;
+                console.log('Buscando post con ID:', postId);
+            };
+            return (
+                <header style={{ backgroundColor: '#4e1404', color: '#ffffff', margin: 0, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 10%", borderRadius: "0 0 10px 10px", position: "sticky", top: "0"}}>
+                    <h1 style={{ color: "#fff" ,fontSize: "2.6rem", fontWeight: "600"}}>Fitness Blog</h1>
+                    <HeaderForm />
+                </header>
+            );
+        }
+
+        function BlogList({ posts, onSelectPost }) {
+            return (
+                <div>
+                    {posts.map(post => (
+                        <div key={post.id} onClick={() => onSelectPost(post.id)}>
+                            <h2>{post.title}</h2>
+                            <p>{post.summary}</p>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        function BlogPost({ post }) {
+            if (!post) return <div>Seleccione una entrada</div>;
+
+            return (
+                <div>
+                    <h2>{post.title}</h2>
+                    <p>{post.content}</p>
+                </div>
+            );
+        }
+        
+        function App() {
+            const [selectedPostId, setSelectedPostId] = React.useState();
+            const [posts, setPosts] = React.useState([
+                { id: 1, title: 'Entrada 1', summary: 'Resumen de la entrada 1', content: 'Contenido completo de la entrada 1' },
+            ]);
+
+            const selectPost = (postId) => {
+                setSelectedPostId(postId);
+            };
+
+            const selectedPost = posts.find(post => post.id === selectedPostId);
+
+            React.useEffect(() => {
+                //aqui puedo hacer varias cosas 
+                normalizeHtml()
+            }, []);
+
+            return (
+                <div>
+                    <Header />
+                    <BlogList posts={posts} onSelectPost={selectPost} />
+                    <BlogPost post={selectedPost} />
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.querySelector('#root'));
+    </script>
+</body>
+</html>
