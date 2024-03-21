@@ -19,11 +19,11 @@
             body.style.margin = '0';
             body.style.fontFamily = 'Arial, sans-serif';
         }
-        function HeaderForm() {
-            const handleSubmit = (e) => {
+        function HeaderForm({onSearch}) {
+            const handleSubmit = async (e) => {
                 e.preventDefault();
                 const postId = e.target.search.value;
-                console.log('Buscando post con ID:', postId);
+                onSearch(postId);
             };
             return (
                 <nav>
@@ -41,13 +41,13 @@
                                     <button type="submit" id="btn-search-post" style = {{ padding: "5px 10px", borderRadius: "7px", border: "none", backgroundColor: "#cd913cff", color: "#4e1404ff", cursor: "pointer" }}>Buscar</button>
                                 </form>
                             </li>
-                            <li style={{ margin: '0px 10px' }}><a href="#" style={{ color: "#fff", textDecoration: "none", fontSize: "1rem", fontWeight: "500" }}>Posts</a></li>
-                            <li style={{ margin: '0px 10px' }}><a href="./html/WritePost.html" style={{ color: "#fff", textDecoration: "none", fontSize: "1rem", fontWeight: "500" }}>Escribe un post</a></li>
+                            <li style={{ margin: '0px 10px' }}><a  onClick={() => window.location.reload()} style={{ color: "#fff", textDecoration: "none", fontSize: "1rem", fontWeight: "500" }}>Posts</a></li>
+                            <li style={{ margin: '0px 10px' }}><a href="#" style={{ color: "#fff", textDecoration: "none", fontSize: "1rem", fontWeight: "500" }}>Escribe un post</a></li>
                         </ul>
                     </nav>
             );
         }
-        function Header() {
+        function Header({ onSearch }) {
             const handleSubmit = (e) => {
                 e.preventDefault();
                 const postId = e.target.search.value;
@@ -55,30 +55,23 @@
             };
             return (
                 <header style={{ backgroundColor: '#4e1404', color: '#ffffff', margin: 0, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 10%", borderRadius: "0 0 10px 10px", position: "sticky", top: "0"}}>
-                    <h1 style={{ color: "#fff" ,fontSize: "2.6rem", fontWeight: "600"}}>Fitness Blog</h1>
-                    <HeaderForm />
+                    <h1 style={{ color: "#fff" ,fontSize: "2.6rem", fontWeight: "600"}}  onClick={() => window.location.reload()}>Fitness Blog</h1>
+                    <HeaderForm onSearch={onSearch} />
                 </header>
             );
         }
-        function BlogList({ posts, onSelectPost }) {
+        function BlogList({ posts, onSelectPost, loading, error }) {
+            if (loading) return <Loading />;
+            if (error) return <div>Error cargando los posts: {error}</div>;
+            if (posts.length === 0) return <div>No hay posts disponibles.</div>;
+
             return (
                 <main style = {{display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", padding: "20px 10%", backgroundColor: "#00181eff"}}>
                     <h2 style ={{color: "#fff"}}>Posts</h2>
                     <div style = {{width: "100%", display: "grid", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "20px", padding: "20px", 
                                     marginBottom: "30px", borderRadius: "40px", gap: "0px", backgroundColor: "#17220eff"}}>
                         {posts.map(post => (
-                        <div key={post.id} style = {{color: "#fff"}}>
-                            <h3 style = {{color: "#fff", fontSize: "1.5rem", fontWeight: "600", marginBottom:"10px"}}>
-                                <span style = {{fontSize: "1.5rem", fontWeight: "600", marginBottom:"10px"}}>{post.id} : </span>
-                                {post.title}
-                            </h3>
-                            <p style = {{ color: ""  }}>fecha: {post.created_at}</p>
-                            <p>categoria: {post.category}</p>
-                            <p>{post.content}</p>
-                            <div>
-                                <button onClick={() => onSelectPost(post.id)}>seleccionar</button>   
-                            </div>
-                        </div>
+                            <Post key={post.id} post={post} onSelectPost={onSelectPost} />
                         ))}
                     </div>
                     
@@ -86,14 +79,41 @@
             );
         }
 
-        function BlogPost({ post }) {
-            console.log("entro",post);
+        function Post({ post, onSelectPost }) {
+            const date = new Date(post.created_at);
+            const dateString = date.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long',
+            });
+            const timeString = date.toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const dateTimeString = `${dateString} a las ${timeString}`;
+            return (
+                <div key={post.id} style = {{color: "#fff"}} onClick={() => onSelectPost(post.id)}>
+                    <h3 style = {{color: "#fff", fontSize: "1.5rem", fontWeight: "600", marginBottom:"10px"}}>
+                        <span style = {{fontSize: "1.5rem", fontWeight: "600", marginBottom:"10px"}}>{post.id} : </span>
+                        {post.title}
+                    </h3>
+                    <p style = {{ color: "#ca9f91ff",fontSize: "1rem" }}>Creado: {dateTimeString}</p>
+                    <p style = {{fontSize:"0.8rem", color:"#cd913cff"}}>categoria: {post.category}</p>
+                    {post.bannerImageB64 && <img src={post.bannerImageB64} alt="imagen" style = {{width: "200px", height: "100px"}}/> }
+                    <p>{post.content}</p>
+                </div>
+            );
+        }
+
+        function EditBlogPost({ post }) {
             if (!post) return <div>Seleccione una post</div>;
             return (
                 <div key={post.id} onClick={() => onSelectPost(post.id)}>
                     <h3><span>{post.id}</span>{post.title}</h3>
                     <p>fecha: {post.created_at}</p>
                     <p>categoria: {post.category}</p>
+                    {post.bannerImageB64 && <img src={post.bannerImageB64} alt="imagen" style = {{width: "200px", height: "100px"}}/> }
                     <p>{post.content}</p>
                     <div>
                         <button>editar</button> 
@@ -102,37 +122,106 @@
                 </div>
             );
         }
+        async function fetchPosts() {
+            try {
+                const response = await fetch('http://127.0.0.1:22309/api/v1/posts/');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error("Error fetching data: ", error);
+                throw error; 
+            }
+        }
+
+        async function fetchPostById(postId) {
+            try {
+                const response = await fetch(`http://127.0.0.1:22309/api/v1/posts/${postId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error("Error fetching data: ", error);
+                throw error; 
+            }
+        }
+
+        function Loading() {
+            return <div style = {{color:"#fff", width:"100%"}}>Cargando...</div>;
+        }
         
         function App() {
             const [selectedPostId, setSelectedPostId] = React.useState();
-            const [posts, setPosts] = React.useState([
-                { id: 1, title: 'Entrada 1', category: "cattegoria", content: 'Contenido del post', bannerImage: 'Contenido completo de la entrada 1', created_at: '2021-10-10' },
-                { id: 2, title: 'Entrada 2', category: "cattegoria", content: 'Contenido del post', bannerImage: 'Contenido completo de la entrada 2', created_at: '2021-10-10' }
-            ]);
+            const [posts, setPosts] = React.useState([]);
+            const [loading, setLoading] = React.useState(true);
+            const [error, setError] = React.useState(null);
         
             const selectPost = (postId) => {
                 setSelectedPostId(postId);
             };
-        
+
+            const searchPostById = async (postId) => {
+                if (!postId) {
+                    setError("Por favor, ingresa el ID de un post para buscar.");
+                    return;
+                }
+                if (postId === selectedPostId) {
+                    return;
+                }
+                const regex = /^\d+$/;
+                if (!regex.test(postId)){
+                    setError("El ID del post debe ser un número.");
+                    return;
+                }
+                setLoading(true);
+                setError(null);
+                try {
+                    const post = await fetchPostById(postId);
+                    console.log(post);
+                    setPosts([post]);
+                } catch (error) {
+                    setError(postId ? `No se encontró el post con ID: ${postId}` : 'Error al buscar el post');
+                } finally {
+                    setLoading(false);
+                }
+            };
             
             const clearSelectedPost = () => {
                 setSelectedPostId(undefined); 
             };
         
             React.useEffect(() => {
-
+                const getAllPosts = async () => {
+                    try {
+                        const data = await fetchPosts();
+                        setPosts(data);
+                        setLoading(false);
+                    } catch (error) {
+                        setError(error.toString());
+                        setLoading(false);
+                    }
+                };
+                getAllPosts();
                 normalizeHtml();
             }, []);
-        
+
+
             const selectedPost = posts.find(post => post.id === selectedPostId);
         
             return (
-                <div>
-                    <Header />
-                    {!selectedPostId && <BlogList posts={posts} onSelectPost={selectPost} />}
-                    {selectedPost && <BlogPost post={selectedPost} />}
-                    {selectedPost && <button onClick={clearSelectedPost}>Volver a la lista</button>}
-                </div>
+                    <div>
+                        <Header onSearch = {searchPostById} />
+                        <React.Suspense fallback={<Loading />}>
+                            {!selectedPostId && <BlogList posts={posts} onSelectPost={selectPost} loading={loading} error={error} />}
+                            {selectedPost && <EditBlogPost post={selectedPost} />}
+                            {selectedPost && <button onClick={clearSelectedPost}>Volver a la lista</button>}
+                        </React.Suspense>
+                    </div>    
+
             );
         }
 
