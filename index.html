@@ -99,7 +99,7 @@
                     </h3>
                     <p style = {{ color: "#ca9f91ff",fontSize: "1rem" }}>Creado: {dateTimeString}</p>
                     <p style = {{fontSize:"0.8rem", color:"#cd913cff"}}>categoria: {post.category}</p>
-                    {post.bannerImageB64 && <img src={post.bannerImageB64} alt="imagen" style = {{width: "200px", height: "100px"}}/> }
+                    {post.bannerImageB64 && <img src={post.bannerImageB64} alt="imagen" style = {{width: "300px", height: "300px"}}/> }
                     <p>{post.content}</p>
                 </div>
             );
@@ -197,7 +197,7 @@
                 const getAllPosts = async () => {
                     try {
                         const data = await fetchPosts();
-                        setPosts(data);
+                        setPosts(data.data);
                         setLoading(false);
                     } catch (error) {
                         setError(error.toString());
